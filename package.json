@@ -1,0 +1,37 @@
+{
+  "name": "dwalt",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "mocha -r ts-node/register src/**/*.spec.ts",
+    "build": "tsc",
+    "prepare": "tsc",
+    "prepublishOnly": "npm run test"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [],
+  "author": "joeflateau",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.799.0",
+    "child-process-promise": "^2.2.1",
+    "commander": "^6.2.0",
+    "fs-extra": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.9",
+    "@types/child-process-promise": "^2.2.1",
+    "@types/mocha": "^7.0.1",
+    "@types/node": "^13.7.7",
+    "chai": "^4.2.0",
+    "mocha": "^7.1.0",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.8.3"
+  },
+  "bin": {
+    "dwalt": "./dist/index.js"
+  }
+}
