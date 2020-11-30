@@ -1,6 +1,6 @@
 import { describe, it } from "mocha";
 import { expect } from "chai";
-import { decodeAuthToken } from ".";
+import { decodeAuthToken } from "./decodeAuthToken";
 
 describe("decodeAuthToken", () => {
   it("should decode auth token", async () => {
