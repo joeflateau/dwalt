@@ -6,6 +6,6 @@ export function spawnDocker(
   dockerCommandArgs: Array<string | string[]>
 ) {
   return spawn("docker", flat([dockerCommand, ...dockerCommandArgs]), {
-    stdio: "inherit",
+    stdio: [process.stdin, process.stderr, process.stderr],
   });
 }
