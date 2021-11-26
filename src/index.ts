@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { program } from "commander";
 import { ECR } from "aws-sdk";
-import { spawnDocker } from "./spawnDocker";
-import { decodeAuthToken } from "./decodeAuthToken";
 import { exec } from "child-process-promise";
+import { program } from "commander";
+import { decodeAuthToken } from "./decodeAuthToken";
+import { spawnDocker } from "./spawnDocker";
 
 export async function run() {
   program
@@ -19,17 +19,20 @@ export async function run() {
 
   const { file, repository, name, tag, buildArg } = program.opts();
 
-  const result = await buildAndCache(file, repository, name, tag, buildArg);
+  const result = await buildAndCache(repository, name, tag, buildArg, {
+    cwd: process.cwd(),
+    file,
+  });
 
   console.log(result);
 }
 
 export async function buildAndCache(
-  file: string,
   repository: string,
   name: string,
   tag: string,
-  buildArgs: string[]
+  buildArgs: string[],
+  { cwd, file }: { cwd: string; file: string }
 ) {
   const ecr = new ECR();
 
@@ -39,9 +42,13 @@ export async function buildAndCache(
     authTokenResponse.authorizationData?.[0].authorizationToken ?? ""
   );
 
-  await spawnDocker("login", [["-u", username], ["-p", password], repository]);
+  await spawnDocker(cwd, "login", [
+    ["-u", username],
+    ["-p", password],
+    repository,
+  ]);
 
-  const pulled = await spawnDocker(`pull`, [
+  const pulled = await spawnDocker(cwd, `pull`, [
     `${repository}:${name}-${tag}`,
   ]).then(
     () => true,
@@ -51,7 +58,7 @@ export async function buildAndCache(
   const buildArgsArgs =
     (buildArgs && buildArgs.map((arg) => [`--build-arg`, arg])) || [];
 
-  await spawnDocker("build", [
+  await spawnDocker(cwd, "build", [
     "--rm=false",
     ...((pulled && ["--cache-from", `${repository}:${name}-${tag}`]) || []),
     [`-t`, `${repository}:${name}-${tag}`],
@@ -60,18 +67,18 @@ export async function buildAndCache(
     `.`,
   ]);
 
-  await spawnDocker("push", [`${repository}:${name}-${tag}`]);
+  await spawnDocker(cwd, "push", [`${repository}:${name}-${tag}`]);
 
   const hash = await exec(
     `docker images --no-trunc --quiet ${repository}:${name}-${tag}`
   ).then((r) => r.stdout.trim().split(":")[1]);
 
-  await spawnDocker("tag", [
+  await spawnDocker(cwd, "tag", [
     `${repository}:${name}-${tag}`,
     `${repository}:${name}-${hash}`,
   ]);
 
-  await spawnDocker("push", [`${repository}:${name}-${hash}`]);
+  await spawnDocker(cwd, "push", [`${repository}:${name}-${hash}`]);
 
   return `${name}-${hash}`;
 }
